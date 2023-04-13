@@ -16,7 +16,7 @@ I chose to use a single file. to be as litteral as I could about the **Monolithi
 | follow profile   | profile/:username | Post   |
 | unfollow profile | profile/:username | Delete |
 
-### Sequence of a request
+### Sequence of a register request 
 
 ```mermaid
 flowchart TD
