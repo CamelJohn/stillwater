@@ -1,5 +1,6 @@
 import { Request } from "express";
 import { Model } from "sequelize";
+import { lowerKebabCase } from "./helpers";
 
 export function authDomainToContract(
   domainUser: Model<any, any>,
@@ -90,4 +91,53 @@ export function articleDomainToContract(domainUser: Model<any, any>) {
       },
     },
   };
+}
+
+export function articleContractToDomain(req: Request, userId: string) {
+  const article = req.body.article;
+  const slug = lowerKebabCase(article.title);
+
+  return {
+    ...article,
+    slug,
+    userId,
+  };
+}
+
+export function getArticleContractToDomain(domainUser: Model<any, any>, slug: string) {
+  const user = domainUser.toJSON();
+  const profile = user.Profile;
+
+  const article = user.Articles.filter((article) => article.slug === slug);
+
+  return {
+    article: {
+      slug: article.slug,
+      title: article.title,
+      description: article.description,
+      body: article.body,
+      tagList: article.tagList,
+      createdAt: article.createdAt,
+      updatedAt: article.updatedAt,
+      favorited: article.favorited,
+      favoritesCount: article.favorited,
+      author: {
+        username: user.username,
+        bio: profile.bio,
+        image: profile.image,
+        following: profile.following,
+      },
+    },
+  }
+}
+
+export function updateArticleContractToDomain(req: Request) {
+  if (!req.body.article.title) {
+    return req.body.article;
+  }
+
+  return {
+    ...req.body.article,
+    slug: lowerKebabCase(req.body.article.title)
+  }
 }

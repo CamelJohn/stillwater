@@ -3,7 +3,7 @@
 This is a monolith (literally on purpose) representing the backend of the real world app.
 I chose to use a single file. to be as litteral as I could about the **Monolithic** essence of this repo.
 
-# Routes
+<!-- # Routes
 
 #### Prefix: /api/v1
 
@@ -27,4 +27,4 @@ flowchart TD
     Exists--No-->Create([User Created])
     Exists--Yes-->Conflig([Conflict Error])
     Create-->Response(( return mapped response))
-```
+``` -->

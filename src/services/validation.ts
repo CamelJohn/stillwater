@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { UnprocessableEntity, Unauthorized } from "http-errors";
+import { UnprocessableEntity, Unauthorized, BadRequest } from "http-errors";
 
 const registerValidationSchema = Joi.object({
   user: Joi.object({
@@ -49,6 +49,24 @@ const createArticleValidationSchema = Joi.object({
   }).required(),
 });
 
+export const getArticleParamValidationSchema = Joi.object({
+  slug: Joi.string().required(),
+}).required();
+
+export const updateArticleParamValidationSchema = Joi.object({
+  slug: Joi.string().required(),
+}).required();
+
+export const updateArticleValidationSchema = Joi.object({
+  article: Joi.object()
+    .keys({
+      title: Joi.string(),
+      description: Joi.string(),
+      body: Joi.string(),
+    })
+    .or("title", "description", "body"),
+}).required();
+
 type ValidationTarget = "body" | "headers" | "params";
 
 export type ValidationKey =
@@ -59,7 +77,10 @@ export type ValidationKey =
   | "get-profile"
   | "follow-profile"
   | "unfollow-profile"
-  | 'create-article';
+  | "create-article"
+  | "get-article"
+  | "update-article-params"
+  | "update-article";
 
 interface ValidationSchemaRecord {
   schema: Joi.ObjectSchema<any>;
@@ -88,24 +109,39 @@ export const ValidationSchema: Record<ValidationKey, ValidationSchemaRecord> = {
     target: "body",
     error: (message) => new UnprocessableEntity(message),
   },
-  'get-profile': {
+  "get-profile": {
     schema: usernameParamsValidationSchema,
-    target: 'params',
-    error: (message) => new UnprocessableEntity(message)
+    target: "params",
+    error: (message) => new UnprocessableEntity(message),
   },
-  'follow-profile': {
+  "follow-profile": {
     schema: usernameParamsValidationSchema,
-    target: 'params',
-    error: (message) => new UnprocessableEntity(message)
+    target: "params",
+    error: (message) => new UnprocessableEntity(message),
   },
-  'unfollow-profile': {
+  "unfollow-profile": {
     schema: usernameParamsValidationSchema,
-    target: 'params',
-    error: (message) => new UnprocessableEntity(message)
+    target: "params",
+    error: (message) => new UnprocessableEntity(message),
   },
-  'create-article': {
+  "create-article": {
     schema: createArticleValidationSchema,
-    target: 'body',
-    error: message => new UnprocessableEntity(message)
-  }
+    target: "body",
+    error: (message) => new UnprocessableEntity(message),
+  },
+  "get-article": {
+    schema: getArticleParamValidationSchema,
+    target: "params",
+    error: (message) => new BadRequest(message),
+  },
+  "update-article-params": {
+    schema: updateArticleParamValidationSchema,
+    target: "params",
+    error: (message) => new BadRequest(message),
+  },
+  "update-article": {
+    schema: updateArticleValidationSchema,
+    target: "body",
+    error: (message) => new UnprocessableEntity(message),
+  },
 };

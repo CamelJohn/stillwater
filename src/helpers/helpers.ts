@@ -14,3 +14,7 @@ export async function getUserFromToken(req: Request) {
     where: { email: decoded.email },
   });
 }
+
+export function lowerKebabCase(text: string) {
+  return text.split(' ').join("-").toLowerCase();
+}

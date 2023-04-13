@@ -17,7 +17,7 @@ export const db = new Sequelize({
   },
 });
 
-function defineRelations() {
+function defineSchemasAndRelations() {
   db.define("User", {
     id: {
       primaryKey: true,
@@ -138,7 +138,7 @@ function defineRelations() {
 export function UseDatabase() {
 
   async function DBConnect() {
-    defineRelations();
+    defineSchemasAndRelations();
     await db.authenticate();
     await db.sync();
   }
