@@ -20,7 +20,7 @@ I chose to use a single file. to be as litteral as I could about the **Monolithi
     <summary>Register</summary>
 
 ### Sequence of a request
-::: mermaid
+```mermaid
 flowchart TD
 Request--->Validate{is request body valid}
 Validate--No-->Unprocessable([Unprocessable Entity])
@@ -29,7 +29,5 @@ User-->Exists{Does User Exist}
 Exists--No-->Create([User Created])
 Exists--Yes-->Conflig([Conflict Error])
 Create-->Response(( return mapped response))
-
-:::
-
+```
 </details>
