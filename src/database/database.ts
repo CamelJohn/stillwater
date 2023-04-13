@@ -73,8 +73,8 @@ function defineSchemasAndRelations() {
       },
       following: {
         allowNull: true,
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
       },
     },
     { indexes: [{ unique: true, fields: ["userId"] }] }
@@ -128,19 +128,27 @@ function defineSchemasAndRelations() {
       },
     },
   });
+
+  // user has one profile (exactly)
+  db.models.User.hasOne(db.models.Profile, { foreignKey: "userId", onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  db.models.Profile.belongsTo(db.models.User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+  // a user may follow many profiles
+  db.models.User.hasMany(db.models.Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  db.models.Profile.belongsTo(db.models.User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   
-  db.models.User.hasOne(db.models.Profile, { foreignKey: "userId" });
-  db.models.Profile.belongsTo(db.models.User);
-  db.models.User.hasMany(db.models.Article, { foreignKey: "userId" });
-  db.models.Article.belongsTo(db.models.User);
+  // a user may own many articles
+  db.models.User.hasMany(db.models.Article, { foreignKey: "userId", onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  db.models.Article.belongsTo(db.models.User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
 }
 
 export function UseDatabase() {
-
   async function DBConnect() {
     defineSchemasAndRelations();
     await db.authenticate();
     await db.sync();
+    // await db.drop();
   }
 
   async function DBDisconnect() {

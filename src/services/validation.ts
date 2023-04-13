@@ -53,9 +53,11 @@ export const getArticleParamValidationSchema = Joi.object({
   slug: Joi.string().required(),
 }).required();
 
-export const updateArticleParamValidationSchema = Joi.object({
-  slug: Joi.string().required(),
-}).required();
+export const updateArticleParamValidationSchema =
+  getArticleParamValidationSchema;
+
+export const deleteArticleParamValidationSchema =
+  getArticleParamValidationSchema;
 
 export const updateArticleValidationSchema = Joi.object({
   article: Joi.object()
@@ -80,7 +82,8 @@ export type ValidationKey =
   | "create-article"
   | "get-article"
   | "update-article-params"
-  | "update-article";
+  | "update-article"
+  | "delete-article-params";
 
 interface ValidationSchemaRecord {
   schema: Joi.ObjectSchema<any>;
@@ -143,5 +146,10 @@ export const ValidationSchema: Record<ValidationKey, ValidationSchemaRecord> = {
     schema: updateArticleValidationSchema,
     target: "body",
     error: (message) => new UnprocessableEntity(message),
+  },
+  "delete-article-params": {
+    schema: deleteArticleParamValidationSchema,
+    target: "params",
+    error: (message) => new BadRequest(message),
   },
 };

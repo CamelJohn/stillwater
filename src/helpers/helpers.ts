@@ -10,9 +10,11 @@ export async function getUserFromToken(req: Request) {
   const raw = extractToken(req);
   const decoded = decodeToken(raw);
 
-  return db.models.User.findOne({
+  const user = await db.models.User.findOne({
     where: { email: decoded.email },
   });
+
+  return user?.toJSON();
 }
 
 export function lowerKebabCase(text: string) {
