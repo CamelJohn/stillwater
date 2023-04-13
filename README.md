@@ -7,17 +7,14 @@ I chose to use a single file. to be as litteral as I could about the **Monolithi
 
 #### Prefix: /api/v1
 
-| Endpoint | Path | Method |
-| -------- | ---- | ------ |
-| register | auth/register | Post |
-| login | auth/login | Post |
-| get current user | auth/me | Get |
-| get profile | profile/:username | Get |
-| follow profile | profile/:username | Post |
+| Endpoint         | Path              | Method |
+| ---------------- | ----------------- | ------ |
+| register         | auth/register     | Post   |
+| login            | auth/login        | Post   |
+| get current user | auth/me           | Get    |
+| get profile      | profile/:username | Get    |
+| follow profile   | profile/:username | Post   |
 | unfollow profile | profile/:username | Delete |
-
-<details>
-    <summary>Register</summary>
 
 ### Sequence of a request
 
@@ -31,4 +28,3 @@ flowchart TD
     Exists--Yes-->Conflig([Conflict Error])
     Create-->Response(( return mapped response))
 ```
-</details>
