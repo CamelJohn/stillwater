@@ -8,7 +8,7 @@ export async function authCreateAndProfileUserFromRequest(req: Request) {
   const token = generateToken(req.body.user.email);
   const password = await h4shP4ssw0rd(req.body.user.password);
 
-  const userWithProfile = await db.models.User.create(
+  const userWithProfile = await db.models.user.create(
     {
       ...req.body.user,
       token,
@@ -17,7 +17,7 @@ export async function authCreateAndProfileUserFromRequest(req: Request) {
     },
     {
       include: {
-        model: db.models.Profile,
+        model: db.models.profile,
       },
     }
   );
@@ -26,10 +26,10 @@ export async function authCreateAndProfileUserFromRequest(req: Request) {
 }
 
 export async function authGetUserFromRequest(req: Request) {
-  const user = await db.models.User.findOne({
+  const user = await db.models.user.findOne({
     where: { email: req.body.user.email },
     include: {
-      model: db.models.Profile,
+      model: db.models.profile,
     },
   });
 

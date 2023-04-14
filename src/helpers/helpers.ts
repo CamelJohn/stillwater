@@ -10,7 +10,7 @@ export async function getUserFromToken(req: Request) {
   const raw = extractToken(req);
   const decoded = decodeToken(raw);
 
-  const user = await db.models.User.findOne({
+  const user = await db.models.user.findOne({
     where: { email: decoded.email },
   });
 

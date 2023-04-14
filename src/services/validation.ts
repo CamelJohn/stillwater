@@ -49,15 +49,9 @@ const createArticleValidationSchema = Joi.object({
   }).required(),
 });
 
-export const getArticleParamValidationSchema = Joi.object({
+export const articleSlugParamValidationSchema = Joi.object({
   slug: Joi.string().required(),
 }).required();
-
-export const updateArticleParamValidationSchema =
-  getArticleParamValidationSchema;
-
-export const deleteArticleParamValidationSchema =
-  getArticleParamValidationSchema;
 
 export const updateArticleValidationSchema = Joi.object({
   article: Joi.object()
@@ -71,6 +65,18 @@ export const updateArticleValidationSchema = Joi.object({
 
 type ValidationTarget = "body" | "headers" | "params";
 
+export type BodyValidationKey = "register" | "login";
+
+export type ParamValidationKey =
+  | "follow-profile"
+  | "get-profile"
+  | "unfollow-profile"
+  | "get-article"
+  | "update-article-params"
+  | "delete-article-params"
+  | "favorite-article-params"
+  | "create-comment-params";
+
 export type ValidationKey =
   | "register"
   | "login"
@@ -83,7 +89,10 @@ export type ValidationKey =
   | "get-article"
   | "update-article-params"
   | "update-article"
-  | "delete-article-params";
+  | "delete-article-params"
+  | "favorite-article-params"
+  | "create-comment"
+  | "create-comment-params";
 
 interface ValidationSchemaRecord {
   schema: Joi.ObjectSchema<any>;
@@ -133,12 +142,12 @@ export const ValidationSchema: Record<ValidationKey, ValidationSchemaRecord> = {
     error: (message) => new UnprocessableEntity(message),
   },
   "get-article": {
-    schema: getArticleParamValidationSchema,
+    schema: articleSlugParamValidationSchema,
     target: "params",
     error: (message) => new BadRequest(message),
   },
   "update-article-params": {
-    schema: updateArticleParamValidationSchema,
+    schema: articleSlugParamValidationSchema,
     target: "params",
     error: (message) => new BadRequest(message),
   },
@@ -148,7 +157,22 @@ export const ValidationSchema: Record<ValidationKey, ValidationSchemaRecord> = {
     error: (message) => new UnprocessableEntity(message),
   },
   "delete-article-params": {
-    schema: deleteArticleParamValidationSchema,
+    schema: articleSlugParamValidationSchema,
+    target: "params",
+    error: (message) => new BadRequest(message),
+  },
+  "favorite-article-params": {
+    schema: articleSlugParamValidationSchema,
+    target: "params",
+    error: (message) => new BadRequest(message),
+  },
+  "create-comment-params": {
+    schema: articleSlugParamValidationSchema,
+    target: "params",
+    error: (message) => new BadRequest(message),
+  },
+  "create-comment": {
+    schema: articleSlugParamValidationSchema,
     target: "params",
     error: (message) => new BadRequest(message),
   },

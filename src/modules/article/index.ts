@@ -8,10 +8,12 @@ import {
 } from "./mappers";
 import {
   createArticleFromRequest,
+  favoriteArticle,
   getArticleFromSlug,
   getSlugFromUpdateRequest,
   getUserNewArticle,
   getUserUpdatedArticle,
+  unfavoriteArticle,
 } from "./helpers";
 
 export const articleRouter = express.Router();
@@ -55,7 +57,7 @@ articleRouter.delete(
   "/:slug",
   Validate(["auth-header", "delete-article-params"]),
   async (req: Request, res: Response, next: NextFunction) => {
-    await db.models.Article.destroy({
+    await db.models.article.destroy({
       where: { slug: req.params.slug },
     });
 
@@ -70,19 +72,51 @@ articleRouter.get(
   async (req: Request, res: Response, next: NextFunction) => {
     const where = req.query.username ? { username: req.query.username } : {};
 
-    const users = await db.models.User.findAll({
+    const users = await db.models.user.findAll({
       where,
-      include: [{ model: db.models.Profile }, { model: db.models.Article }],
+      include: [{ model: db.models.profile }, { model: db.models.article }],
     });
 
     res.status(200).send(listArticlesDomainToContract(users));
   }
 );
 
-articleRouter.get("/feed");
+// TODO: fix where clause - needs to fix favorited/followed too
+articleRouter.get(
+  "/feed",
+  Validate(["auth-header"]),
+  async (req: Request, res: Response, next: NextFunction) => {
+    const articles = await db.models.user.findAll({
+      include: [{ model: db.models.profile }, { model: db.models.article, where: {
 
-articleRouter.post("/:slug/favorite");
-articleRouter.delete("/:slug/favorite");
+      } }],
+      limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 0,
+      offset: req.query.offset ? parseInt(req.query.offset as string, 10) : 20,
+    });
+
+    res.status(200).send(listArticlesDomainToContract(articles));
+  }
+);
+
+articleRouter.post(
+  "/:slug/favorite",
+  Validate(["auth-header", "favorite-article-params"]),
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = await favoriteArticle(req, next);
+
+    res.status(201).send(getArticleContractToDomain(user, req.params.slug));
+  }
+);
+
+articleRouter.delete(
+  "/:slug/favorite",
+  Validate(["auth-header", "favorite-article-params"]),
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = await unfavoriteArticle(req, next);
+
+    res.status(201).send(getArticleContractToDomain(user, req.params.slug));
+  }
+);
 
 articleRouter.post("/:slug/comment");
 articleRouter.get("/:slug/comment");

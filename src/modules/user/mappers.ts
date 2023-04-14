@@ -9,7 +9,7 @@ export async function updateUserContractToDomain(req: Request) {
 
   await db.transaction(async (t) => {
     try {
-      await db.models.User.update(
+      await db.models.user.update(
         {
           email,
           password,
@@ -18,7 +18,7 @@ export async function updateUserContractToDomain(req: Request) {
         { where: { id: me?.id }, transaction: t }
       );
 
-      await db.models.Profile.update(
+      await db.models.profile.update(
         { image, bio },
         { where: { userId: me?.id }, transaction: t }
       );

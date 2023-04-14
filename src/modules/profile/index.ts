@@ -11,9 +11,9 @@ profileRouter.get(
   "/:username",
   Validate(["auth-header", "get-profile"]),
   async (req: Request, res: Response, next: NextFunction) => {
-    const user = await db.models.User.findOne({
+    const user = await db.models.user.findOne({
       where: { username: req.params.username },
-      include: { model: db.models.Profile },
+      include: { model: db.models.profile },
     });
 
     if (!user) {

@@ -5,7 +5,7 @@ import {
   articleContractToDomain,
   updateArticleContractToDomain,
 } from "./mappers";
-import { BadRequest, Unauthorized } from "http-errors";
+import { BadRequest, Unauthorized, NotFound } from "http-errors";
 
 export async function createArticleFromRequest(
   req: Request,
@@ -14,7 +14,7 @@ export async function createArticleFromRequest(
   const me = await getUserFromToken(req);
 
   const article = (
-    await db.models.Article.create(articleContractToDomain(req, me?.id))
+    await db.models.article.create(articleContractToDomain(req, me?.id))
   )?.toJSON();
 
   if (!article) {
@@ -31,14 +31,14 @@ export async function getUserNewArticle(
 ) {
   const me = await getUserFromToken(req);
 
-  const user = await db.models.User.findOne({
+  const user = await db.models.user.findOne({
     where: { id: me?.id },
     include: [
       {
-        model: db.models.Profile,
+        model: db.models.profile,
       },
       {
-        model: db.models.Article,
+        model: db.models.article,
         where: { id: article?.id },
       },
     ],
@@ -59,14 +59,14 @@ export async function getArticleFromSlug(req: Request, next: NextFunction) {
   }
 
   const user = (
-    await db.models.User.findOne({
+    await db.models.user.findOne({
       where: { id: me?.id },
       include: [
         {
-          model: db.models.Profile,
+          model: db.models.profile,
         },
         {
-          model: db.models.Article,
+          model: db.models.article,
         },
       ],
     })
@@ -80,7 +80,7 @@ export async function getArticleFromSlug(req: Request, next: NextFunction) {
 }
 
 export async function updateArticle(req: Request, next: NextFunction) {
-  const [result] = await db.models.Article.update(
+  const [result] = await db.models.article.update(
     updateArticleContractToDomain(req),
     { where: { slug: req.params.slug } }
   );
@@ -98,14 +98,14 @@ export async function getUserUpdatedArticle(req: Request, next: NextFunction) {
   }
 
   const user = (
-    await db.models.User.findOne({
+    await db.models.user.findOne({
       where: { id: me?.id },
       include: [
         {
-          model: db.models.Profile,
+          model: db.models.profile,
         },
         {
-          model: db.models.Article,
+          model: db.models.article,
         },
       ],
     })
@@ -122,6 +122,89 @@ export function getSlugFromUpdateRequest(req: Request) {
   if (!req.body.article.title) {
     return req.params.slug;
   }
-  
+
   return lowerKebabCase(req.body.article.title);
+}
+
+export async function favoriteArticle(req: Request, next: NextFunction) {
+  const slug = req.params.slug;
+  const me = await getUserFromToken(req);
+
+  const article = (
+    await db.models.article.findOne({
+      where: { slug, userId: me?.id },
+    })
+  )?.toJSON();
+
+  if (!article) {
+    return next(new NotFound("article does not exist"));
+  }
+
+  const favorited = [...new Set(...[...article.favorited, me?.id])];
+  const favoriteCound = article.favoriteCound + 1;
+
+  await db.models.article.update(
+    { favorited, favoriteCound },
+    { where: { slug, userId: me?.id } }
+  );
+
+  const user = (
+    await db.models.user.findOne({
+      where: { id: me?.id },
+      include: [
+        {
+          model: db.models.profile,
+        },
+        {
+          model: db.models.article,
+        },
+      ],
+    })
+  )?.toJSON();
+
+  if (!user) {
+    return next(new Unauthorized("invalid credentials"));
+  }
+
+  return user;
+}
+
+export async function unfavoriteArticle(req: Request, next: NextFunction) {
+  const slug = req.params.slug;
+  const me = await getUserFromToken(req);
+
+  const article = (
+    await db.models.article.findOne({
+      where: { slug, userId: me?.id },
+    })
+  )?.toJSON();
+
+  if (!article) {
+    return next(new NotFound("article does not exist"));
+  }
+
+  await db.models.article.update(
+    { favorited: article.favorited.filter((id: string) => me?.id !== id), favoriteCound: article.favoriteCound -1 },
+    { where: { slug, userId: me?.id } }
+  );
+
+  const user = (
+    await db.models.user.findOne({
+      where: { id: me?.id },
+      include: [
+        {
+          model: db.models.profile,
+        },
+        {
+          model: db.models.article,
+        },
+      ],
+    })
+  )?.toJSON();
+
+  if (!user) {
+    return next(new Unauthorized("invalid credentials"));
+  }
+
+  return user;
 }

@@ -10,7 +10,7 @@ export async function unfollowProfile(
   next: NextFunction
 ) {
   const user = (
-    await db.models.User.findOne({
+    await db.models.user.findOne({
       where: { username: req.params.username },
     })
   )?.toJSON();
@@ -26,17 +26,17 @@ export async function unfollowProfile(
   }
 
   const profile = (
-    await db.models.Profile.findOne({ where: { userId: user.id } })
+    await db.models.profile.findOne({ where: { userId: user.id } })
   )?.toJSON();
 
-  await db.models.Profile.update(
+  await db.models.profile.update(
     { following: profile.following.filter((id: string) => id !== me.id) },
     { where: { userId: user.id } }
   );
 
-  const updatedUser = await db.models.User.findOne({
+  const updatedUser = await db.models.user.findOne({
     where: { id: user.id },
-    include: { model: db.models.Profile },
+    include: { model: db.models.profile },
   });
 
   if (!updatedUser) {
@@ -48,7 +48,7 @@ export async function unfollowProfile(
 
 export async function followProfile(req: Request, res: Response, next: NextFunction) {
   const user = (
-    await db.models.User.findOne({
+    await db.models.user.findOne({
       where: { username: req.params.username },
     })
   )?.toJSON();
@@ -64,17 +64,17 @@ export async function followProfile(req: Request, res: Response, next: NextFunct
   }
 
   const profile = (
-    await db.models.Profile.findOne({ where: { userId: user.id } })
+    await db.models.profile.findOne({ where: { userId: user.id } })
   )?.toJSON();
 
-  await db.models.Profile.update(
+  await db.models.profile.update(
     { following: [...new Set([...profile.following, me?.id])] },
     { where: { userId: user.id } }
   );
 
-  const updatedUser = await db.models.User.findOne({
+  const updatedUser = await db.models.user.findOne({
     where: { id: user.id },
-    include: { model: db.models.Profile },
+    include: { model: db.models.profile },
   });
 
   if (!updatedUser) {

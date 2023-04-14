@@ -56,7 +56,7 @@ export async function CanRegister(
   res: Response,
   next: NextFunction
 ) {
-  const exists = await db.models.User.findOne({
+  const exists = await db.models.user.findOne({
     where: { email: req.body.user.email },
   });
 
@@ -72,7 +72,7 @@ export async function CanLogin(
   res: Response,
   next: NextFunction
 ) {
-  const exists = await db.models.User.findOne({
+  const exists = await db.models.user.findOne({
     where: { email: req.body.user.email },
   });
 

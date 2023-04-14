@@ -1,4 +1,4 @@
-import { DataTypes, Sequelize } from "sequelize";
+import { ARRAY, DataTypes, Sequelize } from "sequelize";
 
 export const db = new Sequelize({
   database: "real-world-app",
@@ -11,14 +11,14 @@ export const db = new Sequelize({
     paranoid: true,
   },
   sync: {
-    logging: (message) => console.log(message),
+    logging: (message) => console.log(message + '\n'),
     force: false,
     alter: false,
   },
 });
 
 function defineSchemasAndRelations() {
-  db.define("User", {
+  const User = db.define("user", {
     id: {
       primaryKey: true,
       allowNull: true,
@@ -44,43 +44,51 @@ function defineSchemasAndRelations() {
     },
   });
 
-  db.define(
-    "Profile",
-    {
-      id: {
-        primaryKey: true,
-        allowNull: true,
-        defaultValue: DataTypes.UUIDV4,
-        type: DataTypes.UUID,
-      },
-      userId: {
-        allowNull: false,
-        type: DataTypes.UUID,
-        references: {
-          model: db.models.User,
-          key: "id",
-        },
-      },
-      bio: {
-        allowNull: true,
-        defaultValue: null,
-        type: DataTypes.STRING,
-      },
-      image: {
-        allowNull: true,
-        defaultValue: null,
-        type: DataTypes.STRING,
-      },
-      following: {
-        allowNull: true,
-        type: DataTypes.ARRAY(DataTypes.STRING),
-        defaultValue: [],
-      },
+  const Profile = db.define("profile", {
+    id: {
+      primaryKey: true,
+      allowNull: true,
+      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
     },
-    { indexes: [{ unique: true, fields: ["userId"] }] }
-  );
+    bio: {
+      allowNull: true,
+      defaultValue: null,
+      type: DataTypes.STRING,
+    },
+    image: {
+      allowNull: true,
+      defaultValue: null,
+      type: DataTypes.STRING,
+    },
+  });
 
-  db.define("Article", {
+  const FollowProfile = db.define("follow-profile", {
+    id: {
+      primaryKey: true,
+      allowNull: true,
+      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
+    },
+    profileId: {
+      allowNull: false,
+      type: DataTypes.UUID,
+      references: {
+        key: 'id',
+        model: Profile,
+      }
+    },
+    userId: {
+      allowNull: false,
+      type: DataTypes.UUID,
+      references: {
+        key: 'id',
+        model: User,
+      }
+    }
+  });
+
+  const Article = db.define("article", {
     id: {
       primaryKey: true,
       allowNull: true,
@@ -104,32 +112,34 @@ function defineSchemasAndRelations() {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    tagList: {
+  });
+
+  const FavoriteArticle = db.define("favorite-article", {
+    id: {
+      primaryKey: true,
       allowNull: true,
-      type: DataTypes.ARRAY(DataTypes.STRING),
-      defaultValue: [],
+      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
     },
-    favorited: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true,
-      defaultValue: false,
-    },
-    favoriteCount: {
-      type: DataTypes.INTEGER({ unsigned: false }),
-      allowNull: true,
-      defaultValue: 0,
+    articleId: {
+      allowNull: false,
+      type: DataTypes.UUID,
+      references: {
+        key: 'id',
+        model: Article,
+      }
     },
     userId: {
       allowNull: false,
       type: DataTypes.UUID,
       references: {
-        model: db.models.User,
-        key: "id",
-      },
-    },
+        key: 'id',
+        model: User,
+      }
+    }
   });
 
-  db.define('Tag', {
+  const Tag = db.define("tag", {
     id: {
       primaryKey: true,
       allowNull: true,
@@ -138,11 +148,11 @@ function defineSchemasAndRelations() {
     },
     name: {
       allowNull: false,
-      type: DataTypes.STRING
-    }
+      type: DataTypes.STRING,
+    },
   });
 
-  db.define('Comment', {
+  const Comment = db.define("comment", {
     id: {
       primaryKey: true,
       allowNull: true,
@@ -153,28 +163,31 @@ function defineSchemasAndRelations() {
       allowNull: false,
       type: DataTypes.STRING,
     },
-    userId: {
-      allowNull: false,
-      type: DataTypes.UUID,
-      references: {
-        model: db.models.User,
-        key: "id",
-      },
-    },
-  })
+  });
 
   // user has one profile (exactly)
-  db.models.User.hasOne(db.models.Profile, { foreignKey: "userId", onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-  db.models.Profile.belongsTo(db.models.User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  User.hasOne(Profile);
 
-  // a user may follow many profiles
-  db.models.User.hasMany(db.models.Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-  db.models.Profile.belongsTo(db.models.User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-  
+  Profile.belongsTo(User);
+
   // a user may own many articles
-  db.models.User.hasMany(db.models.Article, { foreignKey: "userId", onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-  db.models.Article.belongsTo(db.models.User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+  User.hasMany(Article);
 
+  Article.belongsTo(User);
+
+  // user may create many comments
+  User.hasMany(Comment);
+  Comment.belongsTo(User);
+
+  Article.hasMany(Comment);
+  Comment.belongsTo(Article, {
+    foreignKey: "articleId",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+
+  Article.hasMany(Tag);
+  Tag.hasMany(Article);
 }
 
 export function UseDatabase() {
@@ -182,7 +195,8 @@ export function UseDatabase() {
     defineSchemasAndRelations();
     await db.authenticate();
     await db.sync();
-    // await db.drop();
+    // await db.drop({ cascade: true });
+    // await db.dropAllSchemas({});
   }
 
   async function DBDisconnect() {
