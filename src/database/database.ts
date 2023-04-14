@@ -104,10 +104,10 @@ function defineSchemasAndRelations() {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    tagId: {
+    tagList: {
       allowNull: true,
-      type: DataTypes.UUID,
-      defaultValue: null,
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      defaultValue: [],
     },
     favorited: {
       type: DataTypes.BOOLEAN,
@@ -128,6 +128,40 @@ function defineSchemasAndRelations() {
       },
     },
   });
+
+  db.define('Tag', {
+    id: {
+      primaryKey: true,
+      allowNull: true,
+      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
+    },
+    tag: {
+      allowNull: false,
+      type: DataTypes.STRING
+    }
+  });
+
+  db.define('Comment', {
+    id: {
+      primaryKey: true,
+      allowNull: true,
+      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
+    },
+    body: {
+      allowNull: false,
+      type: DataTypes.STRING,
+    },
+    userId: {
+      allowNull: false,
+      type: DataTypes.UUID,
+      references: {
+        model: db.models.User,
+        key: "id",
+      },
+    },
+  })
 
   // user has one profile (exactly)
   db.models.User.hasOne(db.models.Profile, { foreignKey: "userId", onDelete: 'CASCADE', onUpdate: 'CASCADE' });
