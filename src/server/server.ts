@@ -18,7 +18,6 @@ import { webRouter } from "./router";
       cors(),
     ]);
 
-    // health goes here
     webServer.get("/health", HealthCheck);
 
     webServer.use("/api/v1", webRouter);

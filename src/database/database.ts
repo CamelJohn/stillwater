@@ -136,7 +136,7 @@ function defineSchemasAndRelations() {
       defaultValue: DataTypes.UUIDV4,
       type: DataTypes.UUID,
     },
-    tag: {
+    name: {
       allowNull: false,
       type: DataTypes.STRING
     }
