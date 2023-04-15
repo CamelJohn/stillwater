@@ -28,12 +28,12 @@ export function articleDomainToProfile(article: any) {
 }
 
 export function articleDomainToContract(user: any) {
-  const [article] = user.Articles;
+  const [article] = user.articles;
 
   return {
     article: {
       ...articleDomainToProfile(article),
-      ...authorDomainToContract(user, user.Profile),
+      ...authorDomainToContract(user, user.profile),
     },
   };
 }
@@ -50,12 +50,12 @@ export function articleContractToDomain(req: Request, userId: string) {
 }
 
 export function getArticleContractToDomain(user: any, slug: string) {
-  const article = user.Articles.find((article: any) => article.slug === slug);
+  const article = user.articles.find((article: any) => article.slug === slug);
 
   return {
     article: {
       ...articleDomainToProfile(article),
-      ...authorDomainToContract(user, user.Profile),
+      ...authorDomainToContract(user, user.profile),
     },
   };
 }
@@ -90,9 +90,9 @@ export function listArticlesDomainToContract(users: Model<any, any>[]) {
     (acc, current) => {
       const user = current?.toJSON();
 
-      const articles: any[] = user.Articles.map((article: any) => ({
+      const articles: any[] = user.articles.map((article: any) => ({
         ...mapArticleDomainToContract(article),
-        ...authorDomainToContract(user, user?.Profile),
+        ...authorDomainToContract(user, user?.profile),
       }));
 
       acc.articles.push(...articles);
@@ -105,4 +105,17 @@ export function listArticlesDomainToContract(users: Model<any, any>[]) {
       articlesCount: 0,
     }
   );
+}
+
+export function commentDomainToContract(user: any, comment: any) {
+  const id = user.comments.findIndex((_comment: any) => _comment.id === comment.id);
+  return {
+    comment: {
+      id,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+      body: comment.body,
+      ...authorDomainToContract(user, user.profile)
+    }
+  }
 }

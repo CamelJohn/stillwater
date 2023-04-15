@@ -13,7 +13,7 @@ export async function authCreateAndProfileUserFromRequest(req: Request) {
       ...req.body.user,
       token,
       password,
-      Profile: { userId: sequelize.col("User.id") },
+      profile: { userId: sequelize.col("user.id") },
     },
     {
       include: {
@@ -28,9 +28,13 @@ export async function authCreateAndProfileUserFromRequest(req: Request) {
 export async function authGetUserFromRequest(req: Request) {
   const user = await db.models.user.findOne({
     where: { email: req.body.user.email },
-    include: {
+    include: [{
       model: db.models.profile,
-    },
+    }, {
+      model: db.models.article
+    }, {
+      model: db.models.comment
+    }],
   });
 
   return user?.toJSON();

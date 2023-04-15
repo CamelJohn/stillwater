@@ -9,9 +9,9 @@ export function profileDomainToContract(
   return {
     profile: {
       username: user?.username,
-      bio: profile?.bio ?? user?.Profile?.bio,
-      image: profile?.image ?? user?.Profile?.image,
-      following: profile?.following || user?.Profile?.following,
+      bio: user.profile?.bio,
+      image: user.profile?.image,
+      following: profile.profileId === user.profile.id,
     },
   };
 }

@@ -184,7 +184,10 @@ export async function unfavoriteArticle(req: Request, next: NextFunction) {
   }
 
   await db.models.article.update(
-    { favorited: article.favorited.filter((id: string) => me?.id !== id), favoriteCound: article.favoriteCound -1 },
+    {
+      favorited: article.favorited.filter((id: string) => me?.id !== id),
+      favoriteCound: article.favoriteCound - 1,
+    },
     { where: { slug, userId: me?.id } }
   );
 
@@ -207,4 +210,25 @@ export async function unfavoriteArticle(req: Request, next: NextFunction) {
   }
 
   return user;
+}
+
+export async function articleFromSlug(req: Request) {
+  const article = (
+    await db.models.article.findOne({ where: { slug: req.params.slug } })
+  )?.toJSON();
+  return article;
+}
+
+export async function addComment(req: Request, articleId: string) {
+  const me = await getUserFromToken(req);
+
+  const comment = (
+    await db.models.comment.create({
+      ...req.body.comment,
+      articleId,
+      userId: me.id,
+    })
+  )?.toJSON();
+
+  return comment;
 }

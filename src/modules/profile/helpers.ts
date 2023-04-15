@@ -9,9 +9,16 @@ export async function unfollowProfile(
   res: Response,
   next: NextFunction
 ) {
+  const me = await getUserFromToken(req);
+
+  if (!me) {
+    return next(new Unauthorized());
+  }
+
   const user = (
     await db.models.user.findOne({
       where: { username: req.params.username },
+      include: [{ model: db.models.profile }],
     })
   )?.toJSON();
 
@@ -19,19 +26,9 @@ export async function unfollowProfile(
     return next(new NotFound("user does not exist"));
   }
 
-  const me = await getUserFromToken(req);
-
-  if (!me) {
-    return next(new Unauthorized());
-  }
-
-  const profile = (
-    await db.models.profile.findOne({ where: { userId: user.id } })
-  )?.toJSON();
-
-  await db.models.profile.update(
-    { following: profile.following.filter((id: string) => id !== me.id) },
-    { where: { userId: user.id } }
+  const [, [profile]] = await db.models.followProfile.update(
+    { profileId: null },
+    { where: { userId: me.id, profileId: user.profile.id }, returning: true }
   );
 
   const updatedUser = await db.models.user.findOne({
@@ -43,13 +40,24 @@ export async function unfollowProfile(
     return next(new NotFound("profile does not exist."));
   }
 
-  res.status(201).send(profileDomainToContract(updatedUser));
+  res.status(201).send(profileDomainToContract(updatedUser, profile));
 }
 
-export async function followProfile(req: Request, res: Response, next: NextFunction) {
+export async function followProfile(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const me = await getUserFromToken(req);
+
+  if (!me) {
+    return next(new Unauthorized());
+  }
+
   const user = (
     await db.models.user.findOne({
       where: { username: req.params.username },
+      include: [{ model: db.models.profile }],
     })
   )?.toJSON();
 
@@ -57,20 +65,10 @@ export async function followProfile(req: Request, res: Response, next: NextFunct
     return next(new NotFound("user does not exist"));
   }
 
-  const me = await getUserFromToken(req);
-
-  if (!me) {
-    return next(new Unauthorized());
-  }
-
-  const profile = (
-    await db.models.profile.findOne({ where: { userId: user.id } })
-  )?.toJSON();
-
-  await db.models.profile.update(
-    { following: [...new Set([...profile.following, me?.id])] },
-    { where: { userId: user.id } }
-  );
+  const [profile] = await db.models.followProfile.upsert({
+    userId: me.id,
+    profileId: user.profile.id,
+  });
 
   const updatedUser = await db.models.user.findOne({
     where: { id: user.id },
@@ -81,5 +79,5 @@ export async function followProfile(req: Request, res: Response, next: NextFunct
     return next(new NotFound("profile does not exist."));
   }
 
-  res.status(201).send(profileDomainToContract(updatedUser));
+  res.status(201).send(profileDomainToContract(updatedUser, profile));
 }

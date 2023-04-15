@@ -63,7 +63,7 @@ function defineSchemasAndRelations() {
     },
   });
 
-  const FollowProfile = db.define("follow-profile", {
+  const FollowProfile = db.define("followProfile", {
     id: {
       primaryKey: true,
       allowNull: true,
@@ -71,7 +71,7 @@ function defineSchemasAndRelations() {
       type: DataTypes.UUID,
     },
     profileId: {
-      allowNull: false,
+      allowNull: true,
       type: DataTypes.UUID,
       references: {
         key: 'id',
@@ -79,7 +79,7 @@ function defineSchemasAndRelations() {
       }
     },
     userId: {
-      allowNull: false,
+      allowNull: true,
       type: DataTypes.UUID,
       references: {
         key: 'id',
@@ -114,7 +114,7 @@ function defineSchemasAndRelations() {
     },
   });
 
-  const FavoriteArticle = db.define("favorite-article", {
+  const FavoriteArticle = db.define("favoriteArticle", {
     id: {
       primaryKey: true,
       allowNull: true,
@@ -122,7 +122,7 @@ function defineSchemasAndRelations() {
       type: DataTypes.UUID,
     },
     articleId: {
-      allowNull: false,
+      allowNull: true,
       type: DataTypes.UUID,
       references: {
         key: 'id',
@@ -130,7 +130,7 @@ function defineSchemasAndRelations() {
       }
     },
     userId: {
-      allowNull: false,
+      allowNull: true,
       type: DataTypes.UUID,
       references: {
         key: 'id',

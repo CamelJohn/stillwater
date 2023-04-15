@@ -3,10 +3,13 @@ import { db } from "../../database/database";
 import { IsLoggedIn, Validate } from "../../server/middleware";
 import {
   articleDomainToContract,
+  commentDomainToContract,
   getArticleContractToDomain,
   listArticlesDomainToContract,
 } from "./mappers";
 import {
+  addComment,
+  articleFromSlug,
   createArticleFromRequest,
   favoriteArticle,
   getArticleFromSlug,
@@ -15,6 +18,7 @@ import {
   getUserUpdatedArticle,
   unfavoriteArticle,
 } from "./helpers";
+import { getUserFromToken, lowerKebabCase } from "../../helpers/helpers";
 
 export const articleRouter = express.Router();
 
@@ -49,7 +53,22 @@ articleRouter.put(
 
     const slug = getSlugFromUpdateRequest(req);
 
-    res.status(201).send(getArticleContractToDomain(user, slug));
+    const query = !req.body.article.title
+      ? { ...req.body.article }
+      : { ...req.body.article, slug: lowerKebabCase(req.body.article.title) };
+
+    await db.models.article.update(query, {
+      where: { userId: user.id, slug: req.params.slug },
+    });
+
+    const updatedUser = (
+      await db.models.user.findOne({
+        where: { id: user.id },
+        include: [{ model: db.models.profile }, { model: db.models.article }],
+      })
+    )?.toJSON();
+
+    res.status(201).send(getArticleContractToDomain(updatedUser, slug));
   }
 );
 
@@ -87,9 +106,10 @@ articleRouter.get(
   Validate(["auth-header"]),
   async (req: Request, res: Response, next: NextFunction) => {
     const articles = await db.models.user.findAll({
-      include: [{ model: db.models.profile }, { model: db.models.article, where: {
-
-      } }],
+      include: [
+        { model: db.models.profile },
+        { model: db.models.article, where: {} },
+      ],
       limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 0,
       offset: req.query.offset ? parseInt(req.query.offset as string, 10) : 20,
     });
@@ -118,6 +138,17 @@ articleRouter.delete(
   }
 );
 
-articleRouter.post("/:slug/comment");
+articleRouter.post(
+  "/:slug/comment",
+  Validate(["auth-header", "create-comment-params"]),
+  async (req: Request, res: Response, next: NextFunction) => {
+    const me = await getUserFromToken(req);
+    const article = await articleFromSlug(req);
+    const comment = await addComment(req, article.id);
+
+    res.status(201).send(commentDomainToContract(me, comment));
+  }
+);
 articleRouter.get("/:slug/comment");
+
 articleRouter.delete("/:slug/comment/:id");

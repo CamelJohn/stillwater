@@ -13,7 +13,7 @@ profileRouter.get(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = await db.models.user.findOne({
       where: { username: req.params.username },
-      include: { model: db.models.profile },
+      include: [{ model: db.models.profile }],
     });
 
     if (!user) {
